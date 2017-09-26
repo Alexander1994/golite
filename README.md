@@ -21,11 +21,13 @@ To run:
 - Select, ex: `select 123` prints hello world
 - Caching
 
-## Feature Ideas
+## ToDo
 - Test Suite
 - Remove row
-- Load length of text into memory to optimize find
+
+## Feature Ideas
+- Load length of text into memory to optimize crawling data
 - Text Compression
-- Improved paging, to be optomized for the users PCs page size
+- Improved paging, to be optomized for the user's PC page size
 - BST trees for efficiency
 - Fork and create a db server

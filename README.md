@@ -21,7 +21,7 @@ To run:
 - Select, ex: `select 123` prints hello world
 - Caching
 
-## ToDo
+## To Do
 - Test Suite
 - Remove row
 

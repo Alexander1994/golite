@@ -28,7 +28,7 @@ To run:
 |:-------:|:----------:|:--------------:|
 | 63 bits | 16 bits    | var bit length |
 
-*note zero length not option*
+*note zero length text is not an option*
 
 *1 bit in ID bit for identification*
 

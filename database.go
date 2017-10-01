@@ -12,7 +12,6 @@ const ID_BYTE_LENGTH = 8
 const TEXT_LENGTH_BYTE_LENGTH = 2
 
 const DIRNAME = ".data"
-const FILENAME = DIRNAME + "/db.dat"
 
 /*
  *   63 bits | 16 bit length | var bit length, max length 65536 *note zero length not option, 1 bit for identification
@@ -30,12 +29,13 @@ var (
 )
 
 var size int64
+var fileName = DIRNAME + "/db.dat"
 
 // DB controls
 func openDB() {
 	os.Mkdir(DIRNAME, 0755)
 
-	file, err = os.OpenFile(FILENAME,
+	file, err = os.OpenFile(fileName,
 		os.O_RDWR|os.O_CREATE,
 		0600)
 	panic(err)
@@ -58,8 +58,11 @@ func closeDB() {
 
 func resetDB() {
 	closeDB()
-	os.Remove(FILENAME)
-	openDB()
+	os.Remove(fileName)
+}
+
+func setDBTestMode() {
+	fileName = DIRNAME + "/testdb.dat"
 }
 
 // DB commands

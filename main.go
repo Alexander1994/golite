@@ -20,6 +20,11 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	var cmd string
 	cmds := createCmds()
+	argsLen := len(os.Args)
+	if argsLen == 2 && os.Args[1] == "test" {
+		setDBTestMode()
+	}
+
 	openDB()
 	loadPageTable()
 
@@ -29,6 +34,9 @@ func main() {
 		cmd = strings.TrimRight(cmd, "\r\n")
 		cmdSplitBySpace := strings.FieldsFunc(cmd, splitOnSpace)
 		if len(cmdSplitBySpace) > 0 {
+			if file == nil {
+				openDB()
+			}
 			cmdType := cmdSplitBySpace[0]
 			event, cmdFound := cmds[cmdType]
 			if cmdFound {

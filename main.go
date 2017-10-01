@@ -1,43 +1,44 @@
 package main
+
 /*
 // #include <stdlib.h>
 import "C"
 */
 
-
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
-	"fmt"
 )
 
 func splitOnSpace(c rune) bool {
-	return c == ' ' 
+	return c == ' '
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	var cmd string
-	cmds := createEvents()
+	cmds := createCmds()
 	openDB()
+	loadPageTable()
 
 	for true {
 		print("golite>")
 		cmd, _ = reader.ReadString('\n') // second var is error
-		cmd = strings.TrimRight(cmd, "\r\n") 
+		cmd = strings.TrimRight(cmd, "\r\n")
 		cmdSplitBySpace := strings.FieldsFunc(cmd, splitOnSpace)
-		if (len(cmdSplitBySpace) > 0) {
+		if len(cmdSplitBySpace) > 0 {
 			cmdType := cmdSplitBySpace[0]
 			event, cmdFound := cmds[cmdType]
 			if cmdFound {
 				event(cmdSplitBySpace[1:])
 			} else {
-				fmt.Printf("unrecognized cmd:'%s'\n", cmd)			
+				fmt.Printf("unrecognized cmd:'%s'\n", cmd)
 			}
 		} else {
-			print("please enter a command\n")
-		}			
-		
+			println("please enter a command")
+		}
+
 	}
 }

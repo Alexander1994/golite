@@ -1,107 +1,90 @@
-
 package main
 
 import (
-	"fmt"
+	"math"
+	"sort"
 )
 
-const MAX_ROW_BYTES = 1024
-const MAX_CACHE_SIZE = 20
-
-const MAX_UINT64 = ^uint64(0)
-
-type CacheRow struct {
-	text string
-	selectCount uint64
-	inMem bool
+type PageRow struct {
+	offset int64
+	length int32
 }
 
-var cache = make(map[uint64]CacheRow)
+var pageTable []PageRow // length, offset
 
+func loadPageTable() {
+	if size == 0 {
+		return
+	}
+	textLengthByteArr := make([]byte, TEXT_LENGTH_BYTE_LENGTH)
 
-// Insert Into Cache
-func insertRow(id uint64, text []string) {
-	textToAddToRow := ""
-	for i, param := range text {
-		if i != len(text) - 1 {
-			param += " "
+	for {
+		offset := currentOffSet()
+		spaceLength, found := seekOverSpaceToId()
+		if !found {
+			break
 		}
-		textToAddToRow += param
-	}
-	if len(cache) < MAX_CACHE_SIZE {
-		addCacheRow(id, textToAddToRow)
-	} else {
-		lowestCacheHitRateId := getLowestHitRowId()
-		rowToPushToMemory := cache[lowestCacheHitRateId]
-		addCacheRow(id, textToAddToRow)
-		pushToDisk(lowestCacheHitRateId, rowToPushToMemory.text)
-		deleteRowFromCache(lowestCacheHitRateId)
-	}
-}
-
-func getLowestHitRowId() uint64 {
-	var lowestHitRateId uint64 = MAX_UINT64
-	var lowestHitRateRow CacheRow
-	for id, cacheRow := range cache {
-		if cacheRow.selectCount < lowestHitRateRow.selectCount {
-			lowestHitRateId = id
-			lowestHitRateRow = cacheRow
+		if spaceLength != 0 {
+			pageTable = append(pageTable, PageRow{offset, spaceLength})
+		}
+		if !seekOverRow(textLengthByteArr) {
+			break
 		}
 	}
-	return lowestHitRateId
 }
 
-func deleteRowFromCache(id uint64) {
-	_, canDel := cache[id];
-    if canDel {
-		delete(cache, id)
-    }
+// find smallest offset that fits length
+func getInsertOffset(toInsertLength int32) (int64, bool) {
+	currSmallestLength := int32(math.MaxInt32) // max int, for comparison
+	var offset int64
+	found := false
+	for _, row := range pageTable {
+		if row.length >= toInsertLength && row.length < currSmallestLength {
+			currSmallestLength = row.length
+			offset = row.offset
+			found = true
+		}
+	}
+	return offset, found
 }
 
-func addCacheRow(id uint64, text string) {
-	cache[id] = CacheRow{text, 0, false}
+func addPageToPageTable(offset int64, textLength uint16) {
+	pageRow := PageRow{offset, rowByteLength(textLength)}
+	pageTable = append(pageTable, pageRow)
+	updatePageTable()
 }
 
+func removePageFromPageTable(i int) {
+	pageTable = append(pageTable[:i], pageTable[i+1:]...)
+}
 
-// Find in Cache or get from memory
-func findRow(id uint64) {
-	cacheRow, textFound := cache[id]
-	if (textFound) {
-		cacheRow.selectCount++
-		fmt.Printf("%d: %s\n", id, cacheRow.text)
-	} else {
-		memoryRow, found := getRowFromDisk(id)
-		if found {
-			if len(cache) == MAX_CACHE_SIZE {
-				lowestCacheHitRateId := getLowestHitRowId()
-				deleteRowFromCache(lowestCacheHitRateId)
+// When offset in page table & value has been updated and page table needs to be updated.
+func removeLengthFromOffset(offset int64, rowLength int32) {
+	for _, row := range pageTable {
+		if row.offset == offset {
+			if rowLength <= row.length {
+				row.length -= rowLength
 			}
-			addMemoryRowToCacheTable(memoryRow)
-			fmt.Printf("%d: %s\n", memoryRow.id, memoryRow.text)
-		} else {
-			print("no texts found\n")			
+		}
+	}
+	updatePageTable()
+}
+
+// For sorting page row by offset
+type ByOffset []PageRow
+
+func (a ByOffset) Len() int           { return len(a) }
+func (a ByOffset) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByOffset) Less(i, j int) bool { return a[i].offset < a[j].offset }
+
+// merge overlapping offset + lengths in page table
+func updatePageTable() {
+	sort.Sort(ByOffset(pageTable))
+	for i := 1; i < len(pageTable); i++ {
+		if pageTable[i-1].offset+int64(pageTable[i-1].length) == pageTable[i].offset {
+			pageTable[i].offset = pageTable[i-1].offset
+			pageTable[i].length += pageTable[i-1].length
+			removePageFromPageTable(i - 1)
 		}
 	}
 }
-
-func addMemoryRowToCacheTable(memoryRow TextDataRow) {
-	cache[memoryRow.id] = CacheRow{memoryRow.text,1,true}	
-}
-
-/*
-	on insert
-push to cache
-if cache is full push: push least selected to memory
-
-	on exit
-push all cache not already in memory to memory
-
-	on select
-check cache
-if not in cache check memory
-if not in memory return nothing
-
-	load cache
-get up to max cache size from disk
-set all as in memory
-*/

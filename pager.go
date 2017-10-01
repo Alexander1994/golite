@@ -58,6 +58,10 @@ func removePageFromPageTable(i int) {
 	pageTable = append(pageTable[:i], pageTable[i+1:]...)
 }
 
+func resetPageTable() {
+	pageTable = nil
+}
+
 // When offset in page table & value has been updated and page table needs to be updated.
 func removeLengthFromOffset(offset int64, rowLength int32) {
 	for _, row := range pageTable {

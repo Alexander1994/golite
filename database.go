@@ -56,6 +56,12 @@ func closeDB() {
 	file.Close()
 }
 
+func resetDB() {
+	closeDB()
+	os.Remove(FILENAME)
+	openDB()
+}
+
 // DB commands
 func pushToDisk(id uint64, text string) {
 	textLength := uint16(len(text))

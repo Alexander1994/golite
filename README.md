@@ -15,6 +15,14 @@ To run:
 ./database
 ```
 
+## Current Features
+- Repl
+- Insert, ex: `insert 123 hello world`
+- Select, ex: `select 123` prints hello world
+- Delete, ex: `delete 123` removes the row with the 123 id
+- Delete  all rows, ex: `delete all` removes all rows in the database
+- Caching
+
 ## Current Row Data Structure
 | ID      | textLength | text           |
 |:-------:|:----------:|:--------------:|
@@ -22,14 +30,7 @@ To run:
 
 *note zero length not option*
 
-*1 in ID bit for identification*
-
-## Current Features
-- Repl
-- Insert, ex: `insert 123 hello world`
-- Select, ex: `select 123` prints hello world
-- Delete, ex: `delete 123` removes the row with the 123 id
-- Caching
+*1 bit in ID bit for identification*
 
 ## To Do
 - Test Suite

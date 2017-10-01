@@ -112,20 +112,6 @@ func deleteRow(id uint64) {
 	}
 }
 
-/*
-	on insert
-push to cache
-if cache is full push: push least selected to memory
-
-	on exit
-push all cache not already in memory to memory
-
-	on select
-check cache
-if not in cache check memory
-if not in memory return nothing
-
-	load cache
-get up to max cache size from disk
-set all as in memory
-*/
+func resetCache() {
+	cache = make(map[uint64]CacheRow)
+}

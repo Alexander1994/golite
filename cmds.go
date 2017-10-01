@@ -40,11 +40,19 @@ func selectCmd(params []string) { // %d, ID
 
 func deleteCmd(params []string) { // %d, ID
 	if len(params) == 1 {
-		id, err := strconv.ParseUint(params[0], 10, 64)
-		if err == nil && validID(id) {
-			deleteRow(id)
+		if params[0] == "all" {
+			resetCache()
+			resetPageTable()
+			resetDB()
+			print("All data in the db and cache has been removed")
+
 		} else {
-			print("could not convert param to int\n")
+			id, err := strconv.ParseUint(params[0], 10, 64)
+			if err == nil && validID(id) {
+				deleteRow(id)
+			} else {
+				print("could not convert param to int\n")
+			}
 		}
 	} else {
 		print("invalid arg count, 1 expected: %d, id \n")

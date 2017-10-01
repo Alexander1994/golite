@@ -15,15 +15,24 @@ To run:
 ./database
 ```
 
+## Current Row Data Structure
+| ID      | textLength | text           |
+|:-------:|:----------:|:--------------:|
+| 63 bits | 16 bits    | var bit length |
+
+*note zero length not option*
+
+*1 in ID bit for identification*
+
 ## Current Features
 - Repl
 - Insert, ex: `insert 123 hello world`
 - Select, ex: `select 123` prints hello world
+- Delete, ex: `delete 123` removes the row with the 123 id
 - Caching
 
 ## To Do
 - Test Suite
-- Remove row
 
 ## Feature Ideas
 - Load length of text into memory to optimize crawling data

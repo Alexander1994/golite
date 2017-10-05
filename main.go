@@ -21,11 +21,12 @@ func main() {
 	var cmd string
 	cmds := createCmds()
 	argsLen := len(os.Args)
-	if argsLen == 2 && os.Args[1] == "test" {
-		setDBTestMode()
-	}
 
-	openDB()
+	testMode := false
+	if argsLen == 2 && os.Args[1] == "test" {
+		testMode = true
+	}
+	openDB(testMode)
 	loadPageTable()
 
 	for true {
@@ -35,7 +36,7 @@ func main() {
 		cmdSplitBySpace := strings.FieldsFunc(cmd, splitOnSpace)
 		if len(cmdSplitBySpace) > 0 {
 			if file == nil {
-				openDB()
+				openDB(testMode)
 			}
 			cmdType := cmdSplitBySpace[0]
 			event, cmdFound := cmds[cmdType]

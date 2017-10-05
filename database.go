@@ -32,7 +32,10 @@ var size int64
 var fileName = dirname + "/db.dat"
 
 // DB controls
-func openDB() {
+func openDB(testMode bool) {
+	if testMode {
+		fileName = dirname + "/testdb.dat"
+	}
 	os.Mkdir(dirname, 0755)
 
 	file, err = os.OpenFile(fileName,
@@ -59,10 +62,6 @@ func closeDB() {
 func resetDB() {
 	closeDB()
 	os.Remove(fileName)
-}
-
-func setDBTestMode() {
-	fileName = dirname + "/testdb.dat"
 }
 
 // DB commands
@@ -159,8 +158,8 @@ func readID(idByteArr []byte) (uint64, bool) {
 	if bytesRead == 0 {
 		return 0, false
 	}
-	test := binary.BigEndian.Uint64(idByteArr)
-	return dbIDToID(test), true
+	dbID := binary.BigEndian.Uint64(idByteArr)
+	return dbIDToID(dbID), true
 }
 
 func readTextLength(textLengthByteArr []byte) (uint16, bool) {

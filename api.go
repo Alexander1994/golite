@@ -1,8 +1,8 @@
 package main
 
 // OpenDB is for opening the DB. found in database.go
-func OpenDB() {
-	openDB()
+func OpenDB(testMode bool) {
+	openDB(testMode)
 }
 
 // CloseDB is for closing the DB. found in database.go

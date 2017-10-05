@@ -20,7 +20,7 @@ func loadPageTable() {
 
 	for {
 		offset := currentOffSet()
-		spaceLength, found := seekOverSpaceToId()
+		spaceLength, found := seekOverSpaceToID()
 		if !found {
 			break
 		}

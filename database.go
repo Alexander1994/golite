@@ -94,11 +94,11 @@ func getRowFromDisk(id uint64) (TextDataRow, bool) {
 	idByteArr := make([]byte, idByteLength)
 	resetCursorToStart()
 	for {
-		_, found := seekOverSpaceToId()
+		_, found := seekOverSpaceToID()
 		if !found {
 			break
 		}
-		rowId, found := readId(idByteArr)
+		rowID, found := readID(idByteArr)
 		if !found {
 			break
 		}
@@ -106,9 +106,9 @@ func getRowFromDisk(id uint64) (TextDataRow, bool) {
 		if !found {
 			break
 		}
-		if rowId == id {
+		if rowID == id {
 			text := readText(textLength)
-			return TextDataRow{rowId, textLength, text}, true
+			return TextDataRow{rowID, textLength, text}, true
 		}
 		if !seekOverText(textLength) {
 			break
@@ -123,12 +123,12 @@ func deleteRowFromDisk(id uint64) bool {
 	idByteArr := make([]byte, idByteLength)
 	resetCursorToStart()
 	for {
-		_, found := seekOverSpaceToId()
+		_, found := seekOverSpaceToID()
 		if !found {
 			break
 		}
 		offset := currentOffSet()
-		rowId, found := readId(idByteArr)
+		rowID, found := readID(idByteArr)
 		if !found {
 			break
 		}
@@ -137,7 +137,7 @@ func deleteRowFromDisk(id uint64) bool {
 		if !found {
 			break
 		}
-		if rowId == id {
+		if rowID == id {
 			addPageToPageTable(offset, textLength)
 			deleteRowInDisk(textLength)
 			fileStat, _ := file.Stat()
@@ -153,7 +153,7 @@ func deleteRowFromDisk(id uint64) bool {
 }
 
 // Read functions
-func readId(idByteArr []byte) (uint64, bool) {
+func readID(idByteArr []byte) (uint64, bool) {
 	bytesRead, e := file.Read(idByteArr)
 	panic(e)
 	if bytesRead == 0 {
@@ -207,7 +207,7 @@ func seekOverRow(textLengthByteArr []byte) bool {
 	return true
 }
 
-func seekOverSpaceToId() (int32, bool) {
+func seekOverSpaceToID() (int32, bool) {
 	var emptyByteCount int32
 	byteArr := []byte{0}
 	emptyArr := []byte{0}
@@ -270,6 +270,10 @@ func resetCursorToStart() {
 	file.Seek(0, 0)
 }
 
+func rowByteLength(textLength uint16) int32 {
+	return int32(textLengthByteLength + idByteLength + textLength)
+}
+
 // for debug purposes
 func panic(err error) {
 	if err != nil {
@@ -277,8 +281,4 @@ func panic(err error) {
 		log.Fatal(err)
 		print("\n")
 	}
-}
-
-func rowByteLength(textLength uint16) int32 {
-	return int32(textLengthByteLength + idByteLength + textLength)
 }

@@ -8,10 +8,10 @@ import (
 	"os"
 )
 
-const ID_BYTE_LENGTH = 8
-const TEXT_LENGTH_BYTE_LENGTH = 2
+const idByteLength = 8
+const textLengthByteLength = 2
 
-const DIRNAME = ".data"
+const dirname = ".data"
 
 /*
  *   63 bits | 16 bit length | var bit length, max length 65536 *note zero length not option, 1 bit for identification
@@ -29,11 +29,11 @@ var (
 )
 
 var size int64
-var fileName = DIRNAME + "/db.dat"
+var fileName = dirname + "/db.dat"
 
 // DB controls
 func openDB() {
-	os.Mkdir(DIRNAME, 0755)
+	os.Mkdir(dirname, 0755)
 
 	file, err = os.OpenFile(fileName,
 		os.O_RDWR|os.O_CREATE,
@@ -62,7 +62,7 @@ func resetDB() {
 }
 
 func setDBTestMode() {
-	fileName = DIRNAME + "/testdb.dat"
+	fileName = dirname + "/testdb.dat"
 }
 
 // DB commands
@@ -90,8 +90,8 @@ func pushToDisk(id uint64, text string) {
 }
 
 func getRowFromDisk(id uint64) (TextDataRow, bool) {
-	textLengthByteArr := make([]byte, TEXT_LENGTH_BYTE_LENGTH)
-	idByteArr := make([]byte, ID_BYTE_LENGTH)
+	textLengthByteArr := make([]byte, textLengthByteLength)
+	idByteArr := make([]byte, idByteLength)
 	resetCursorToStart()
 	for {
 		_, found := seekOverSpaceToId()
@@ -119,8 +119,8 @@ func getRowFromDisk(id uint64) (TextDataRow, bool) {
 }
 
 func deleteRowFromDisk(id uint64) bool {
-	textLengthByteArr := make([]byte, TEXT_LENGTH_BYTE_LENGTH)
-	idByteArr := make([]byte, ID_BYTE_LENGTH)
+	textLengthByteArr := make([]byte, textLengthByteLength)
+	idByteArr := make([]byte, idByteLength)
 	resetCursorToStart()
 	for {
 		_, found := seekOverSpaceToId()
@@ -188,7 +188,7 @@ func seekOverText(textLength uint16) bool {
 }
 
 func seekOverID() bool {
-	seekLength, e := file.Seek(ID_BYTE_LENGTH, 1)
+	seekLength, e := file.Seek(idByteLength, 1)
 	panic(e)
 	return seekLength < size
 }
@@ -230,8 +230,8 @@ func seekOverSpaceToId() (int32, bool) {
 
 // conversions
 func textDataRowToBytes(row TextDataRow) []byte {
-	idByteArr := make([]byte, ID_BYTE_LENGTH)
-	textLengthByteArr := make([]byte, TEXT_LENGTH_BYTE_LENGTH)
+	idByteArr := make([]byte, idByteLength)
+	textLengthByteArr := make([]byte, textLengthByteLength)
 	var rowByteArr []byte
 
 	textByteArr := []byte(row.text)
@@ -254,7 +254,7 @@ func bytesToTextDataRow(b []byte) TextDataRow {
 
 // helper functions
 func deleteRowInDisk(textLength uint16) {
-	_, e := file.Seek(-(TEXT_LENGTH_BYTE_LENGTH + ID_BYTE_LENGTH), 1)
+	_, e := file.Seek(-(textLengthByteLength + idByteLength), 1)
 	panic(e)
 	nullRow := make([]byte, rowByteLength(textLength))
 	file.Write(nullRow)
@@ -280,5 +280,5 @@ func panic(err error) {
 }
 
 func rowByteLength(textLength uint16) int32 {
-	return int32(TEXT_LENGTH_BYTE_LENGTH + ID_BYTE_LENGTH + textLength)
+	return int32(textLengthByteLength + idByteLength + textLength)
 }

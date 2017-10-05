@@ -16,7 +16,7 @@ func loadPageTable() {
 	if size == 0 {
 		return
 	}
-	textLengthByteArr := make([]byte, TEXT_LENGTH_BYTE_LENGTH)
+	textLengthByteArr := make([]byte, textLengthByteLength)
 
 	for {
 		offset := currentOffSet()

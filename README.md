@@ -23,15 +23,14 @@ To run:
 - Delete  database, ex: `delete database` emptys the cache and removes the data file
 - Open test database, ex `./database test` opens seperate new database for testing
 - Caching
+- External Api
 
 ## Current Row Data Structure
-| ID      | text length | text           |
-|:-------:|:-----------:|:--------------:|
-| 63 bits | 16 bits     | var bit length |
+| row identifier | ID      | text length | text           |
+|:--------------:|:-------:|:-----------:|:--------------:|
+| 1 bit          | 63 bits | 16 bits     | var bit length |
 
-*note zero length text is not an option*
-
-*1 bit in ID bit for identifying of a row*
+*note: text length in bytes, zero length text is not an option*
 
 ## To Do
 - Test Suite

@@ -1,13 +1,14 @@
 package main
 
-const UINT_MAX = ^uint64(0)
-const MAX_ID = UINT_MAX / 2
+import "math"
+
+const maxID uint64 = math.MaxUint64 / 2
 
 func idToDBID(id uint64) uint64 {
 	if !validID(id) {
 		return id
 	}
-	return (^MAX_ID) | id // add identifier bit
+	return (^maxID) | id // add identifier bit
 }
 
 func dbIDToID(dbID uint64) uint64 {
@@ -18,5 +19,5 @@ func dbIDToID(dbID uint64) uint64 {
 }
 
 func validID(ID uint64) bool {
-	return ID <= MAX_ID && ID > 0
+	return ID <= maxID && ID > 0
 }

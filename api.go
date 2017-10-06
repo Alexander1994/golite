@@ -16,8 +16,8 @@ func CloseDB() {
 	closeDisk()
 }
 
-// ResetDB clears the entire db
-func ResetDB() {
+// DeleteDB clears the entire db
+func DeleteDB() {
 	resetCache()
 	resetPageTable()
 	closeDisk()

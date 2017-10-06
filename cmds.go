@@ -59,7 +59,7 @@ func selectCmd(params []string) { // %d, ID
 func deleteCmd(params []string) { // %d, ID
 	if len(params) == 1 {
 		if params[0] == "database" {
-			ResetDB()
+			DeleteDB()
 			println("All data in the db and cache has been removed")
 		} else {
 			id, err := strconv.ParseUint(params[0], 10, 64)

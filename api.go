@@ -1,5 +1,7 @@
 package main
 
+import "os"
+
 // OpenDB is for opening the DB. found in database.go
 func OpenDB(testMode bool) {
 	openDisk(testMode)
@@ -18,7 +20,8 @@ func CloseDB() {
 func ResetDB() {
 	resetCache()
 	resetPageTable()
-	resetDB()
+	closeDisk()
+	os.Remove(fileName)
 }
 
 // Insert is for inserting a row into the db

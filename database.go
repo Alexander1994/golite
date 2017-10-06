@@ -14,8 +14,8 @@ const textLengthByteLength = 2
 const dirname = ".data"
 
 /*
- *   63 bits | 16 bit length | var bit length, max length 65536 *note zero length not option, 1 bit for identification
- *      ID   |  textLength   | text
+ *  1 bite        | 63 bits | 16 bit length | var bit length, max length 65536 *note zero length not option, 1 bit for identification
+ * row identifier | ID      | textLength    | text
  */
 type TextDataRow struct {
 	id         uint64
@@ -52,11 +52,6 @@ func closeDisk() {
 	} else {
 		println("open db before attempting to close it")
 	}
-}
-
-func resetDB() {
-	closeDisk()
-	os.Remove(fileName)
 }
 
 // DB commands

@@ -26,8 +26,7 @@ func main() {
 	if argsLen == 2 && os.Args[1] == "test" {
 		testMode = true
 	}
-	openDB(testMode)
-	loadPageTable()
+	OpenDB(testMode)
 
 	for true {
 		print("golite>")
@@ -35,9 +34,6 @@ func main() {
 		cmd = strings.TrimRight(cmd, "\r\n")
 		cmdSplitBySpace := strings.FieldsFunc(cmd, splitOnSpace)
 		if len(cmdSplitBySpace) > 0 {
-			if file == nil {
-				openDB(testMode)
-			}
 			cmdType := cmdSplitBySpace[0]
 			event, cmdFound := cmds[cmdType]
 			if cmdFound {

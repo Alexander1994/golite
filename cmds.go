@@ -9,7 +9,7 @@ import (
 type cmdEvent func(params []string) // should probably return error/bool
 
 func exitCmd(params []string) { // args should probably be empty
-	closeDB()
+	CloseDB()
 	os.Exit(0)
 }
 

@@ -43,3 +43,11 @@ func addMemoryRowToCacheTable(memoryRow TextDataRow) {
 func resetCache() {
 	cache = make(map[uint64]cacheRow)
 }
+
+func closeCache() {
+	for id, cacheRow := range cache {
+		if !cacheRow.inMem {
+			pushToDisk(id, cacheRow.text)
+		}
+	}
+}

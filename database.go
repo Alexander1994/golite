@@ -32,7 +32,7 @@ var size int64
 var fileName = dirname + "/db.dat"
 
 // DB controls
-func openDB(testMode bool) {
+func openDisk(testMode bool) {
 	if testMode {
 		fileName = dirname + "/testdb.dat"
 	}
@@ -46,21 +46,16 @@ func openDB(testMode bool) {
 	size = fileStat.Size()
 }
 
-func closeDB() {
+func closeDisk() {
 	if file != nil {
-		for id, cacheRow := range cache {
-			if !cacheRow.inMem {
-				pushToDisk(id, cacheRow.text)
-			}
-		}
+		file.Close()
 	} else {
-		println("open db first.")
+		println("open db before attempting to close it")
 	}
-	file.Close()
 }
 
 func resetDB() {
-	closeDB()
+	closeDisk()
 	os.Remove(fileName)
 }
 

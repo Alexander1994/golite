@@ -2,12 +2,16 @@ package main
 
 // OpenDB is for opening the DB. found in database.go
 func OpenDB(testMode bool) {
-	openDB(testMode)
+	openDisk(testMode)
+	loadPageTable()
 }
 
 // CloseDB is for closing the DB. found in database.go
 func CloseDB() {
-	closeDB()
+	closeCache()
+	resetCache()
+	resetPageTable()
+	closeDisk()
 }
 
 // ResetDB clears the entire db

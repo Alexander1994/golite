@@ -17,7 +17,7 @@ func getLowestHitRowID() uint64 {
 	var lowestHitRateID uint64 = math.MaxUint64
 	var lowestHitRateRow cacheRow
 	for id, cacheRow := range cache {
-		if cacheRow.selectCount < lowestHitRateRow.selectCount {
+		if cacheRow.selectCount <= lowestHitRateRow.selectCount {
 			lowestHitRateID = id
 			lowestHitRateRow = cacheRow
 		}

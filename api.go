@@ -28,19 +28,21 @@ func DeleteDB() {
 func Insert(id uint64, text string) bool {
 	_, foundInCache := cache[id]
 	_, foundOnDisk := getRowFromDisk(id)
-	inDB := !foundInCache && !foundOnDisk
-	if inDB {
+	inDB := foundInCache || foundOnDisk
+	if !inDB {
 		if len(cache) < maxCacheSize {
 			addCacheRow(id, text)
 		} else {
 			lowestCacheHitRateID := getLowestHitRowID()
 			rowToPushToMemory := cache[lowestCacheHitRateID]
-			addCacheRow(id, text)
-			pushToDisk(lowestCacheHitRateID, rowToPushToMemory.text)
+			if !rowToPushToMemory.inMem {
+				addCacheRow(id, text)
+				pushToDisk(lowestCacheHitRateID, rowToPushToMemory.text)
+			}
 			deleteRowFromCache(lowestCacheHitRateID)
 		}
 	}
-	return inDB
+	return !inDB // if not in DB then it was inserted
 }
 
 // Delete is for deleting a row from the db

@@ -1,20 +1,11 @@
 package main
 
-/*
-// #include <stdlib.h>
-import "C"
-*/
-
 import (
 	"bufio"
 	"fmt"
 	"os"
 	"strings"
 )
-
-func splitOnSpace(c rune) bool {
-	return c == ' '
-}
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
@@ -46,4 +37,8 @@ func main() {
 		}
 
 	}
+}
+
+func splitOnSpace(c rune) bool {
+	return c == ' '
 }

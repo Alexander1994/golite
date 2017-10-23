@@ -37,24 +37,30 @@ To run:
 
 ## Current Data Structure
 Metadata Row
+
 | ID    | length | data offset |
 |:-----:|:------:|:-----------:|
 | uin32 | uint16 | uint32      |
 
+
 *all offset are from the end of metadata table* | *length doesn't include 0 value* | *zero is an invalid ID*
 
 At the end of the metadata table
+
 | next metatable offset |
 |:---------------------:|
 | uint32                |
+
 
 The text data is inbetween the current metatable and the next metatable
 
 ## Previous Data structure
 concurrent rows of:
+
 | row identifier | ID      | text length | text           |
 |:--------------:|:-------:|:-----------:|:--------------:|
 | 1 bit          | 63 bits | 16 bits     | var bit length |
+
 
 *note: text length in bytes, zero length text is not an option*
 

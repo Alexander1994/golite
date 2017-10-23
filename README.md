@@ -25,32 +25,17 @@ To run:
 - Caching
 - External Api
 
-## Current Row Data Structure
-| row identifier | ID      | text length | text           |
-|:--------------:|:-------:|:-----------:|:--------------:|
-| 1 bit          | 63 bits | 16 bits     | var bit length |
-
-*note: text length in bytes, zero length text is not an option*
-
 ## To Do
 - Test Suite
 
 ## Feature Ideas
-- Load length of text into memory to optimize crawling data
+- Table creation
+- Option for table with fixed length text
 - Text Compression
-- Improved paging, to be optomized for the user's PC page size
 - BST trees for efficiency
-- Fork and create a db server
+- Use in another project to create a db server
 
-## Road Map
-I have had 2 ideas to optomize my database that can be combined
-- BST
-- Seperate the Index from the data
-
-For those famillair with computer science BSTs are a pretty obvious and efficient improvement to a DB.
-Seperating the Index from the data was an idea I came up with on my own that I'm interested in exploring.
-A Row while be split into seperate tables: metadata and data. The metadata table will be the size of the OS's page with an offset in the last spot for the next metadata table.
-
+## Current Data Structure
 Metadata Row
 | ID    | length | data offset |
 |:-----:|:------:|:-----------:|
@@ -60,20 +45,35 @@ Metadata Row
 
 At the end of the metadata table
 | next metatable offset |
-|:----------------------:|
-| uint32 |
+|:---------------------:|
+| uint32                |
 
-Data Row
-| Text            |
-|:---------------:|
-| variable length |
+The text data is inbetween the current metatable and the next metatable
+
+## Previous Data structure
+concurrent rows of:
+| row identifier | ID      | text length | text           |
+|:--------------:|:-------:|:-----------:|:--------------:|
+| 1 bit          | 63 bits | 16 bits     | var bit length |
+
+*note: text length in bytes, zero length text is not an option*
+
+## Road Map
+I have had 2 ideas to optomize my database
+- BST
+- Seperate the Index from the data
+
+For those famillair with computer science BSTs are a pretty obvious and efficient improvement to a DB.
+Seperating the Index from the data was an idea I came up with on my own that I'm interested in exploring.
+A Row while be split into seperate tables: metadata and data. The metadata table will be the size of the OS's page with an offset in the last spot for the next metadata table.
 
 Pros
 - No need for in memory pager, Metadata rows describe empty locations
 - Reduced number of reads from disk, as metadata table includes all critical data for navigating the data table.
-- Deletion could consist exclusively of removing the Metadata
-- Still allows for use of BSTs (would be used in metadata table)
+- Deletion consists exclusively of removing the Metadata
+- Could use BST in Metatable if text length was fixed length
 
 Cons
 - Forms a complex relationship between the OS page size, the max length of the variable size text, data offset and next metadata table offset, ex: # of rows in metadata x row data length (must be) < next metatable offset or the next metadata table would be unreachable.
-- Inserting is still pretty intensive as it requires looping through the whole table to find holes
+- Inserting is still pretty intensive as it requires looping through the whole table to find holes and requires 2 writes.
+- Cannot figure out how to use BSTs with variable length text.

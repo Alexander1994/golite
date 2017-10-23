@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_persistanceTest(t *testing.T) {
-	id := uint64(123)
+	id := uint32(123)
 	text := "hello world"
 	isInsert := Insert(id, text)
 	CloseDB()

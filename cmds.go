@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 )
@@ -15,14 +16,15 @@ func exitCmd(params []string) { // args should probably be empty
 
 func insertCmd(params []string) { // %d %s, ID Text
 	if len(params) >= 2 {
-		id, err := strconv.ParseUint(params[0], 10, 64)
-		if err == nil && validID(id) {
+		rawID, err := strconv.ParseUint(params[0], 10, 32)
+		id := uint32(rawID)
+		if err == nil && id != 0 {
 			if !Insert(id, joinOnSpace(params[1:])) {
 				print("Unable to insert a row with that ID already exists in the DB\n")
 			}
 
 		} else {
-			print("first arg should be <=" + string(maxID) + " for the id of the text\n")
+			print("first arg should be <=" + strconv.Itoa(math.MaxUint32) + " for the id of the text\n")
 		}
 	} else {
 		print("invalid arg count, 2 expected: %d %s, id text goes here\n")
@@ -42,8 +44,9 @@ func joinOnSpace(text []string) string {
 
 func selectCmd(params []string) { // %d, ID
 	if len(params) == 1 {
-		id, err := strconv.ParseUint(params[0], 10, 64)
-		if err == nil && validID(id) {
+		rawID, err := strconv.ParseUint(params[0], 10, 32)
+		id := uint32(rawID)
+		if err == nil && id != 0 {
 			text, found := Select(id)
 			if found {
 				fmt.Printf("%d: %s\n", id, text)
@@ -62,8 +65,9 @@ func deleteCmd(params []string) { // %d, ID
 			DeleteDB()
 			println("All data in the db and cache has been removed")
 		} else {
-			id, err := strconv.ParseUint(params[0], 10, 64)
-			if err == nil && validID(id) {
+			rawID, err := strconv.ParseUint(params[0], 10, 32)
+			id := uint32(rawID)
+			if err == nil && id != 0 {
 				if Delete(id) {
 					print("row deleted from db\n")
 				} else {

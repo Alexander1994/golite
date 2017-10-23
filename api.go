@@ -5,48 +5,44 @@ import "os"
 // OpenDB is for opening the DB. found in database.go
 func OpenDB(testMode bool) {
 	openDisk(testMode)
-	loadPageTable()
 }
 
 // CloseDB is for closing the DB. found in database.go
 func CloseDB() {
 	closeCache()
 	resetCache()
-	resetPageTable()
 	closeDisk()
 }
 
 // DeleteDB clears the entire db
 func DeleteDB() {
 	resetCache()
-	resetPageTable()
 	closeDisk()
 	os.Remove(fileName)
 }
 
 // Insert is for inserting a row into the db
-func Insert(id uint64, text string) bool {
+func Insert(id uint32, text string) bool { // succesful insert
 	_, foundInCache := cache[id]
-	_, foundOnDisk := getRowFromDisk(id)
-	inDB := foundInCache || foundOnDisk
-	if !inDB {
-		if len(cache) < maxCacheSize {
-			addCacheRow(id, text)
-		} else {
-			lowestCacheHitRateID := getLowestHitRowID()
-			rowToPushToMemory := cache[lowestCacheHitRateID]
-			if !rowToPushToMemory.inMem {
-				addCacheRow(id, text)
-				pushToDisk(lowestCacheHitRateID, rowToPushToMemory.text)
-			}
-			deleteRowFromCache(lowestCacheHitRateID)
-		}
+	if foundInCache { // if ID is in the cache
+		return false
 	}
-	return !inDB // if not in DB then it was inserted
+	if len(cache) < maxCacheSize {
+		addCacheRow(id, text)
+		return true
+	}
+	lowestCacheHitRateID := getLowestHitRowID()
+	rowToPushToMemory := cache[lowestCacheHitRateID]
+	deleteRowFromCache(lowestCacheHitRateID)
+	if !rowToPushToMemory.inMem {
+		addCacheRow(id, text)
+		return pushToDisk(lowestCacheHitRateID, rowToPushToMemory.text) // if ID already exists in memory
+	}
+	return true
 }
 
 // Delete is for deleting a row from the db
-func Delete(id uint64) bool {
+func Delete(id uint32) bool {
 	cacheRow, textFound := cache[id]
 	if textFound {
 		delete(cache, id)
@@ -59,21 +55,24 @@ func Delete(id uint64) bool {
 }
 
 // Select is for retrieving a row from the db
-func Select(id uint64) (string, bool) {
+func Select(id uint32) (string, bool) {
 	cacheRow, textFound := cache[id]
 	fileStat, _ := file.Stat()
 	if textFound {
 		cacheRow.selectCount++
 		return cacheRow.text, true
 	} else if fileStat.Size() > 0 {
-		memoryRow, found := getRowFromDisk(id)
+		text, found := getRowFromDisk(id)
 		if found {
 			if len(cache) == maxCacheSize {
 				lowestCacheHitRateID := getLowestHitRowID()
 				deleteRowFromCache(lowestCacheHitRateID)
+				if !cache[lowestCacheHitRateID].inMem {
+					pushToDisk(lowestCacheHitRateID, cache[lowestCacheHitRateID].text)
+				}
 			}
-			addMemoryRowToCacheTable(memoryRow)
-			return memoryRow.text, true
+			addMemRowToCache(id, text)
+			return text, true
 		}
 	}
 	return "", false

@@ -7,14 +7,14 @@ const maxCacheSize = 20
 
 type cacheRow struct {
 	text        string
-	selectCount uint64
+	selectCount uint32
 	inMem       bool
 }
 
-var cache = make(map[uint64]cacheRow)
+var cache = make(map[uint32]cacheRow)
 
-func getLowestHitRowID() uint64 {
-	var lowestHitRateID uint64 = math.MaxUint64
+func getLowestHitRowID() uint32 {
+	var lowestHitRateID uint32 = math.MaxUint32
 	var lowestHitRateRow cacheRow
 	for id, cacheRow := range cache {
 		if cacheRow.selectCount <= lowestHitRateRow.selectCount {
@@ -25,23 +25,25 @@ func getLowestHitRowID() uint64 {
 	return lowestHitRateID
 }
 
-func deleteRowFromCache(id uint64) {
+func deleteRowFromCache(id uint32) {
 	_, canDel := cache[id]
 	if canDel {
 		delete(cache, id)
 	}
 }
 
-func addCacheRow(id uint64, text string) {
+func addCacheRow(id uint32, text string) {
 	cache[id] = cacheRow{text, 0, false}
 }
 
-func addMemoryRowToCacheTable(memoryRow TextDataRow) {
-	cache[memoryRow.id] = cacheRow{memoryRow.text, 1, true}
+func addMemRowToCache(id uint32, text string) {
+	addCacheRow(id, text)
+	cacheRow := cache[id]
+	cacheRow.selectCount++
 }
 
 func resetCache() {
-	cache = make(map[uint64]cacheRow)
+	cache = make(map[uint32]cacheRow)
 }
 
 func closeCache() {

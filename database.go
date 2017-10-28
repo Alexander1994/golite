@@ -14,8 +14,10 @@ type TextDataRow struct {
 	text       string
 }
 
+type disk os.File
+
 var (
-	file    *os.File
+	file    *disk
 	fileErr error
 )
 
@@ -23,44 +25,43 @@ var size int64
 var fileName = dirname + "/db.dat"
 
 // DB controls
-func openDisk(testMode bool) {
+func (file *disk) open(testMode bool) {
 	if testMode {
 		fileName = dirname + "/testdb.dat"
 	}
 	os.Mkdir(dirname, 0755)
 
-	file, fileErr = os.OpenFile(fileName,
+	f, err := os.OpenFile(fileName,
 		os.O_RDWR|os.O_CREATE,
 		0600)
-	fatal(fileErr)
-	fileStat, _ := file.Stat()
-	size = fileStat.Size()
+	fatal(err)
+	file = (*disk)(f)
 	if size < int64(osPageSize) {
 		emptyMetaTableRow := make([]byte, osPageSize)
-		file.Write(emptyMetaTableRow)
+		file.write(emptyMetaTableRow)
 	}
 }
 
-func closeDisk() {
+func (file *disk) close() {
 	if file != nil {
-		file.Close()
+		(*os.File)(file).Close()
 	} else {
 		println("open db before attempting to close it")
 	}
 }
 
 // DB commands
-func pushToDisk(id uint32, text string) bool {
+func (file *disk) pushToDisk(id uint32, text string) bool {
 	nextMetaTableOffset := uint32(0)
 	textLength := uint16(len(text))
 
-	resetCursorToStart()
+	file.resetCursorToStart()
 
 	for true {
-		loadMetaTable(nextMetaTableOffset)
+		metaTable := file.loadMetaTable(nextMetaTableOffset)
 		insertLocation := metaTableMaxRowCount
 		for i := uint32(0); i < metaTableMaxRowCount; i++ {
-			ithID := getID(i)
+			ithID := metaTable.getID(i)
 			if id == ithID {
 				return false
 			}
@@ -68,40 +69,40 @@ func pushToDisk(id uint32, text string) bool {
 				insertLocation = i
 			}
 			if ithID != 0 {
-				insertRowIntoPageTable(getTextOffset(i), getLength(i))
+				pgTable.insertRow(metaTable.getTextOffset(i), metaTable.getLength(i))
 			}
 		}
 		if insertLocation != metaTableMaxRowCount { // if hole was found
-			nextMetaTableOffset = getMetaTableOffset()
-			offset, found := getSmallestHoleToFit(textLength, nextMetaTableOffset)
-			resetPgTable()
+			nextMetaTableOffset = metaTable.getMetaTableOffset()
+			offset, found := pgTable.getSmallestHoleToFit(textLength, nextMetaTableOffset)
+			pgTable.reset()
 			if found {
-				setMetaTableRow(insertLocation, id, textLength, offset)
-				setTextRow(offset, text)
+				file.setMetaTableRow(insertLocation, id, textLength, offset)
+				file.setTextRow(offset, text)
 				return true
 			}
 		} else { // if no holes found add next table and seek to
-			addAndGoToNextMetaTable()
+			file.addAndGoToNextMetaTable()
 			nextMetaTableOffset = 0 // since we are at the next metatable offset=0
-			resetPgTable()
+			pgTable.reset()
 		}
 	}
 	return false // should never happen, throw err?
 }
 
-func getRowFromDisk(id uint32) (string, bool) { // text, found
-	resetCursorToStart()
+func (file *disk) getRowFromDisk(id uint32) (string, bool) { // text, found
+	file.resetCursorToStart()
 	nextMetaTableOffset := uint32(0)
 	for true {
-		loadMetaTable(nextMetaTableOffset)
+		metaTable := file.loadMetaTable(nextMetaTableOffset)
 		for i := uint32(0); i < metaTableMaxRowCount; i++ {
-			ithID := getID(i)
+			ithID := metaTable.getID(i)
 			if id == ithID {
-				return getText(getTextOffset(i), getLength(i)), true
+				return file.getText(metaTable.getTextOffset(i), metaTable.getLength(i)), true
 			}
 		}
 
-		nextMetaTableOffset = getMetaTableOffset()
+		nextMetaTableOffset = metaTable.getMetaTableOffset()
 		if nextMetaTableOffset == 0 {
 			return "", false
 		}
@@ -109,19 +110,19 @@ func getRowFromDisk(id uint32) (string, bool) { // text, found
 	return "", false
 }
 
-func deleteRowFromDisk(id uint32) bool {
-	resetCursorToStart()
+func (file *disk) deleteRowFromDisk(id uint32) bool {
+	file.resetCursorToStart()
 	nextMetaTableOffset := uint32(0)
 	for true {
-		loadMetaTable(nextMetaTableOffset)
+		metaTable := file.loadMetaTable(nextMetaTableOffset)
 		for i := uint32(0); i < metaTableMaxRowCount; i++ {
-			ithID := getID(i)
+			ithID := metaTable.getID(i)
 			if id == ithID {
-				deleteIthRow(i)
+				file.deleteIthRow(i)
 				return true
 			}
 		}
-		nextMetaTableOffset = getMetaTableOffset()
+		nextMetaTableOffset = metaTable.getMetaTableOffset()
 		if nextMetaTableOffset == 0 {
 			return false
 		}
@@ -130,18 +131,39 @@ func deleteRowFromDisk(id uint32) bool {
 }
 
 // Cursor info & controls
-func currentOffSet() int64 {
-	offset, e := file.Seek(0, 1)
+func (file *disk) seek(offset int64) {
+	_, err := (*os.File)(file).Seek(offset, 1)
+	fatal(err)
+}
+
+func (file *disk) write(b []byte) {
+	_, err := (*os.File)(file).Write(b)
+	fatal(err)
+}
+
+func (file *disk) read(b []byte) {
+	_, err := (*os.File)(file).Read(b)
+	fatal(err)
+}
+
+func (file *disk) size() int64 {
+	fileStat, err := ((*os.File)(file)).Stat()
+	fatal(err)
+	return fileStat.Size()
+}
+
+func (file *disk) currentOffSet() int64 {
+	offset, e := ((*os.File)(file)).Seek(0, 1)
 	fatal(e)
 	return offset
 }
 
-func resetCursorToStart() {
-	file.Seek(0, 0)
+func (file *disk) resetCursorToStart() {
+	(*os.File)(file).Seek(0, 0)
 }
 
-func printCursorOffset() {
-	fmt.Printf("cursor offset:%d\n", currentOffSet())
+func (file *disk) printCursorOffset() {
+	fmt.Printf("cursor offset:%d\n", file.currentOffSet())
 }
 
 // Logging tool

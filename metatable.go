@@ -13,49 +13,51 @@ const (
 	metaTableOffsetByteLen = 4
 )
 
+// MetaTable ...
+type MetaTable []byte
+
 var (
-	osPageSize                    = int32(os.Getpagesize())
-	metaTable                     = make([]byte, osPageSize)
-	metaTableMaxRowCount          = uint32((osPageSize - metaTableOffsetByteLen) / metaRowByteLen)
-	metaTableOffsetAndXtraByteLen = uint32(osPageSize) - (metaTableMaxRowCount * metaRowByteLen)
+	osPageSize                              = int32(os.Getpagesize())
+	metaTable                     MetaTable = make([]byte, osPageSize)
+	metaTableMaxRowCount                    = uint32((osPageSize - metaTableOffsetByteLen) / metaRowByteLen)
+	metaTableOffsetAndXtraByteLen           = uint32(osPageSize) - (metaTableMaxRowCount * metaRowByteLen)
 )
 
 // Meta Table getters
-func getID(ithRow uint32) uint32 {
+func (metaTable MetaTable) getID(ithRow uint32) uint32 {
 	offset := ithRow * metaRowByteLen
 	return binary.LittleEndian.Uint32(metaTable[offset : idByteLen+offset])
 }
 
-func getLength(ithRow uint32) uint16 {
+func (metaTable MetaTable) getLength(ithRow uint32) uint16 {
 	offset := ithRow*metaRowByteLen + idByteLen
 	return binary.LittleEndian.Uint16(metaTable[offset : textLenByteLen+offset])
 }
 
-func getTextOffset(ithRow uint32) uint32 {
+func (metaTable MetaTable) getTextOffset(ithRow uint32) uint32 {
 	offset := ithRow*metaRowByteLen + idByteLen + textLenByteLen
 	return binary.LittleEndian.Uint32(metaTable[offset : offsetByteLen+offset])
 }
 
-func getMetaTableOffset() uint32 {
+func (metaTable MetaTable) getMetaTableOffset() uint32 {
 	return binary.LittleEndian.Uint32(metaTable[osPageSize-metaTableOffsetByteLen:])
 }
 
-func getText(offset uint32, length uint16) string {
-	file.Seek(int64(offset), 1)
+func (file *disk) getText(offset uint32, length uint16) string {
+	file.seek(int64(offset))
 	textByteArr := make([]byte, length)
-	file.Read(textByteArr)
+	file.read(textByteArr)
 	return string(textByteArr)
 }
 
 // Text data setter
-func setTextRow(offset uint32, text string) {
-	_, err := file.Seek(int64(offset), 1)
-	fatal(err)
-	file.WriteString(text)
+func (file *disk) setTextRow(offset uint32, text string) {
+	file.seek(int64(offset))
+	((*os.File)(file)).WriteString(text)
 }
 
 // Meta Table setter
-func setMetaTableRow(ithRow uint32, id uint32, textLength uint16, offset uint32) {
+func (file *disk) setMetaTableRow(ithRow uint32, id uint32, textLength uint16, offset uint32) {
 	idByteArr := make([]byte, idByteLen)
 	textLengthByteArr := make([]byte, textLenByteLen)
 	offsetByteArr := make([]byte, offsetByteLen)
@@ -69,50 +71,47 @@ func setMetaTableRow(ithRow uint32, id uint32, textLength uint16, offset uint32)
 	rowByteArr = append(rowByteArr, textLengthByteArr...)
 	rowByteArr = append(rowByteArr, offsetByteArr...)
 
-	writeInIthRowAndSeekToTableEnd(ithRow, rowByteArr)
+	file.writeInIthRowAndSeekToTableEnd(ithRow, rowByteArr)
 }
 
 // Delete ith meta table row
-func deleteIthRow(i uint32) { // bytes seeked to reverse to end
+func (file *disk) deleteIthRow(i uint32) { // bytes seeked to reverse to end
 	emptyRow := make([]byte, metaRowByteLen)
 	seekAmount := metaTableOffsetAndXtraByteLen + (metaTableMaxRowCount-i)*metaRowByteLen
-	file.Seek(-int64(seekAmount), 1) // seek back to index
-	_, err := file.Write(emptyRow)
-	fatal(err)
+	file.seek(-int64(seekAmount)) // seek back to index
+	file.write(emptyRow)
 }
 
 // load meta table into memory from disk
-func loadMetaTable(offset uint32) {
-	metaTable = make([]byte, osPageSize)
+func (file *disk) loadMetaTable(offset uint32) MetaTable {
+	metaTable = make(MetaTable, osPageSize)
 	if offset > 0 {
-		_, err := file.Seek(int64(offset), 1)
-		fatal(err)
+		file.seek(int64(offset))
 	}
-	_, err := file.Read(metaTable)
-	fatal(err)
+	file.read(metaTable)
+	return metaTable
 }
 
 // add a new meta table and set cursor offset to next meta table start
-func addAndGoToNextMetaTable() {
+func (file *disk) addAndGoToNextMetaTable() {
 	lastPgIndex := uint32(len(pgTable) - 1)
-	nextMetaTableOffset := getTextOffset(lastPgIndex) + uint32(getLength(lastPgIndex))
-	file.Seek(-int64(metaTableOffsetByteLen), 1) // seek to current metatable offset location and set next metatable offset
+	nextMetaTableOffset := metaTable.getTextOffset(lastPgIndex) + uint32(metaTable.getLength(lastPgIndex))
+	file.seek(-int64(metaTableOffsetByteLen)) // seek to current metatable offset location and set next metatable offset
 	nextMetaTableOffsetByteArr := make([]byte, metaTableOffsetByteLen)
 	binary.LittleEndian.PutUint32(nextMetaTableOffsetByteArr, nextMetaTableOffset)
-	file.Write(nextMetaTableOffsetByteArr)
+	file.write(nextMetaTableOffsetByteArr)
 
-	file.Seek(int64(nextMetaTableOffset), 1) // seek to next metatable
+	file.seek(int64(nextMetaTableOffset)) // seek to next metatable
 
 	emptyTable := make([]byte, osPageSize) // create metatable on file
-	file.Write(emptyTable)
+	file.write(emptyTable)
 
-	file.Seek(-int64(osPageSize), 1) // Seek and adjust to start before metatable
+	file.seek(-int64(osPageSize)) // Seek and adjust to start before metatable
 }
 
-func writeInIthRowAndSeekToTableEnd(i uint32, row []byte) { // bytes seeked to reverse to end
+func (file *disk) writeInIthRowAndSeekToTableEnd(i uint32, row []byte) { // bytes seeked to reverse to end
 	seekAmount := metaTableOffsetAndXtraByteLen + (metaTableMaxRowCount-i)*metaRowByteLen
-	file.Seek(-int64(seekAmount), 1) // seek back to index
-	_, err := file.Write(row)
-	fatal(err)
-	file.Seek(int64(seekAmount-uint32(len(row))), 1)
+	file.seek(-int64(seekAmount)) // seek back to index
+	file.write(row)
+	file.seek(int64(seekAmount - uint32(len(row))))
 }

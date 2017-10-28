@@ -11,9 +11,11 @@ type cacheRow struct {
 	inMem       bool
 }
 
-var cache = make(map[uint32]cacheRow)
+type cacheTable map[uint32]cacheRow
 
-func getLowestHitRowID() uint32 {
+var cache = make(cacheTable)
+
+func (cache cacheTable) getLowestHitRowID() uint32 {
 	var lowestHitRateID uint32 = math.MaxUint32
 	var lowestHitRateRow cacheRow
 	for id, cacheRow := range cache {
@@ -25,31 +27,31 @@ func getLowestHitRowID() uint32 {
 	return lowestHitRateID
 }
 
-func deleteRowFromCache(id uint32) {
+func (cache cacheTable) deleteRow(id uint32) {
 	_, canDel := cache[id]
 	if canDel {
 		delete(cache, id)
 	}
 }
 
-func addCacheRow(id uint32, text string) {
+func (cache cacheTable) addRow(id uint32, text string) {
 	cache[id] = cacheRow{text, 0, false}
 }
 
-func addMemRowToCache(id uint32, text string) {
-	addCacheRow(id, text)
+func (cache cacheTable) addMemRow(id uint32, text string) {
+	cache.addRow(id, text)
 	cacheRow := cache[id]
 	cacheRow.selectCount++
 }
 
-func resetCache() {
+func (cache cacheTable) reset() {
 	cache = make(map[uint32]cacheRow)
 }
 
-func closeCache() {
+func (cache cacheTable) close() {
 	for id, cacheRow := range cache {
 		if !cacheRow.inMem {
-			pushToDisk(id, cacheRow.text)
+			file.pushToDisk(id, cacheRow.text)
 		}
 	}
 }

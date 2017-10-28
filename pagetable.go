@@ -9,16 +9,17 @@ type pageRow struct {
 	offset uint32
 	length uint16
 }
+type pageTable []pageRow
 
-var pgTable []pageRow
+var pgTable pageTable
 
-func insertRowIntoPageTable(offset uint32, length uint16) {
+func (pgTable pageTable) insertRow(offset uint32, length uint16) {
 	currRange := pageRow{offset, length}
 	pgTable = append(pgTable, currRange)
 }
 
-func getSmallestHoleToFit(length uint16, nextMetaTableOffset uint32) (uint32, bool) { // offset relative to meta table end, offset found
-	orderPgTable()
+func (pgTable pageTable) getSmallestHoleToFit(length uint16, nextMetaTableOffset uint32) (uint32, bool) { // offset relative to meta table end, offset found
+	pgTable.orderByOffset()
 	pgTableLen := len(pgTable)
 	smallestHoleOffset := uint32(math.MaxUint32)
 	currHoleSize := uint32(0)
@@ -28,11 +29,11 @@ func getSmallestHoleToFit(length uint16, nextMetaTableOffset uint32) (uint32, bo
 		return 0, true
 	}
 	for i := 0; i < pgTableLen; i++ {
-		ithEndOffset := getIthEndOffset(i)
+		ithEndOffset := pgTable.getIthEndOffset(i)
 		if nextMetaTableOffset == 0 && i == len(pgTable)-1 && !foundHole { // if no next meta table escape, no holes & no more pgs
-			return getIthEndOffset(len(pgTable) - 1), true // return end offset
+			return pgTable.getIthEndOffset(len(pgTable) - 1), true // return end offset
 		}
-		currHoleSize = getHoleSize(i, nextMetaTableOffset)
+		currHoleSize = pgTable.getHoleSize(i, nextMetaTableOffset)
 		if uint16(currHoleSize) == length { // if perfect hole use
 			return ithEndOffset, true
 		}
@@ -47,24 +48,24 @@ func getSmallestHoleToFit(length uint16, nextMetaTableOffset uint32) (uint32, bo
 	return 0, false
 }
 
-func getHoleSize(i int, nextMetaTableOffset uint32) uint32 {
-	ithEndOffset := getIthEndOffset(i)
+func (pgTable pageTable) getHoleSize(i int, nextMetaTableOffset uint32) uint32 {
+	ithEndOffset := pgTable.getIthEndOffset(i)
 	if i == len(pgTable)-1 { // if last index use space to next meta table
 		return nextMetaTableOffset - ithEndOffset
 	}
 	return pgTable[i+1].offset - ithEndOffset
 }
 
-func resetPgTable() {
+func (pgTable pageTable) reset() {
 	pgTable = nil
 }
 
-func orderPgTable() {
+func (pgTable pageTable) orderByOffset() {
 	sort.Slice(pgTable, func(i, j int) bool {
 		return pgTable[i].offset < pgTable[j].offset
 	})
 }
 
-func getIthEndOffset(i int) uint32 {
+func (pgTable pageTable) getIthEndOffset(i int) uint32 {
 	return pgTable[i].offset + uint32(pgTable[i].length)
 }

@@ -11,8 +11,6 @@ type pageRow struct {
 }
 type pageTable []pageRow
 
-var pgTable pageTable
-
 func (pgTable pageTable) insertRow(offset uint32, length uint16) {
 	currRange := pageRow{offset, length}
 	pgTable = append(pgTable, currRange)
@@ -54,10 +52,6 @@ func (pgTable pageTable) getHoleSize(i int, nextMetaTableOffset uint32) uint32 {
 		return nextMetaTableOffset - ithEndOffset
 	}
 	return pgTable[i+1].offset - ithEndOffset
-}
-
-func (pgTable pageTable) reset() {
-	pgTable = nil
 }
 
 func (pgTable pageTable) orderByOffset() {

@@ -6,8 +6,6 @@ import (
 	"os"
 )
 
-const dirname = ".data"
-
 type TextDataRow struct {
 	id         uint32
 	textLength uint16
@@ -16,30 +14,18 @@ type TextDataRow struct {
 
 type disk os.File
 
-var (
-	file    *disk
-	fileErr error
-)
-
-var size int64
-var fileName = dirname + "/db.dat"
-
 // DB controls
-func (file *disk) open(testMode bool) {
-	if testMode {
-		fileName = dirname + "/testdb.dat"
-	}
-	os.Mkdir(dirname, 0755)
-
-	f, err := os.OpenFile(fileName,
+func createDisk(fileName string) *disk {
+	f, err := os.OpenFile(dirname+"/"+fileName+".dat",
 		os.O_RDWR|os.O_CREATE,
 		0600)
 	fatal(err)
-	file = (*disk)(f)
-	if size < int64(osPageSize) {
+	file := (*disk)(f)
+	if file.size() < int64(osPageSize) {
 		emptyMetaTableRow := make([]byte, osPageSize)
 		file.write(emptyMetaTableRow)
 	}
+	return file
 }
 
 func (file *disk) close() {
@@ -56,6 +42,7 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 	textLength := uint16(len(text))
 
 	file.resetCursorToStart()
+	var pgTable pageTable
 
 	for true {
 		metaTable := file.loadMetaTable(nextMetaTableOffset)
@@ -75,16 +62,16 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 		if insertLocation != metaTableMaxRowCount { // if hole was found
 			nextMetaTableOffset = metaTable.getMetaTableOffset()
 			offset, found := pgTable.getSmallestHoleToFit(textLength, nextMetaTableOffset)
-			pgTable.reset()
 			if found {
 				file.setMetaTableRow(insertLocation, id, textLength, offset)
 				file.setTextRow(offset, text)
 				return true
 			}
 		} else { // if no holes found add next table and seek to
-			file.addAndGoToNextMetaTable()
+			lastPgIndex := uint32(len(pgTable) - 1)
+			nextMetaTableOffset := metaTable.getTextOffset(lastPgIndex) + uint32(metaTable.getLength(lastPgIndex))
+			file.addAndGoToNextMetaTable(nextMetaTableOffset)
 			nextMetaTableOffset = 0 // since we are at the next metatable offset=0
-			pgTable.reset()
 		}
 	}
 	return false // should never happen, throw err?

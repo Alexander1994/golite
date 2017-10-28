@@ -13,7 +13,9 @@ type cacheRow struct {
 
 type cacheTable map[uint32]cacheRow
 
-var cache = make(cacheTable)
+func createCache() cacheTable {
+	return make(cacheTable)
+}
 
 func (cache cacheTable) getLowestHitRowID() uint32 {
 	var lowestHitRateID uint32 = math.MaxUint32
@@ -46,12 +48,4 @@ func (cache cacheTable) addMemRow(id uint32, text string) {
 
 func (cache cacheTable) reset() {
 	cache = make(map[uint32]cacheRow)
-}
-
-func (cache cacheTable) close() {
-	for id, cacheRow := range cache {
-		if !cacheRow.inMem {
-			file.pushToDisk(id, cacheRow.text)
-		}
-	}
 }

@@ -11,13 +11,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	var cmd string
 	cmds := createCmds()
-	argsLen := len(os.Args)
-
-	testMode := false
-	if argsLen == 2 && os.Args[1] == "test" {
-		testMode = true
-	}
-	OpenDB(testMode)
+	OpenDB()
 
 	for true {
 		print("golite>")

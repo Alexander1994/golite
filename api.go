@@ -1,7 +1,7 @@
 package main
 
 // OpenDB is for opening the DB. found in database.go
-func OpenDB(testMode bool) {
+func OpenDB() {
 	openDB()
 }
 

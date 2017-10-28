@@ -8,7 +8,7 @@ import (
 var _1000CharString string
 
 func setupTests() {
-	OpenDB(true)
+	OpenDB()
 	_1000CharString = stringOfLength(1000)
 }
 
@@ -27,14 +27,18 @@ func TestMain(m *testing.M) {
 func Test_persistanceTest(t *testing.T) {
 	id := uint32(123)
 	text := "hello world"
-	isInsert := Insert(id, text)
+	tableName := "test"
+	if !CreateTable(tableName) {
+		t.Errorf("could not create a table")
+	}
+	isInsert := Insert(id, text, tableName)
 	CloseDB()
 	if !isInsert {
 		t.Errorf("could not insert")
 	}
 
-	OpenDB(true)
-	textFromSelect, found := Select(id)
+	OpenDB()
+	textFromSelect, found := Select(id, tableName)
 
 	if !found || text != textFromSelect {
 		t.Errorf("persistance broken")
@@ -42,7 +46,8 @@ func Test_persistanceTest(t *testing.T) {
 }
 
 func Benchmark1000lengthInsert(b *testing.B) {
-	Insert(1, _1000CharString)
+	tableName := "test"
+	Insert(1, _1000CharString, tableName)
 }
 
 // helper functions

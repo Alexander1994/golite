@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type cmdEvent func(params []string) // should probably return error/bool
@@ -16,7 +17,9 @@ func exitCmd(params []string) { // args should probably be empty
 
 func createTableCmd(params []string) { // %s tableName
 	if len(params) == 1 {
-		if !CreateTable(params[0]) {
+		if strings.Contains(params[0], ".") {
+			print("table cannot contain period char")
+		} else if !CreateTable(params[0]) {
 			print("unable to create table, table already exists\n")
 		}
 	} else {

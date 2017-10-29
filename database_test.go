@@ -43,6 +43,10 @@ func Test_persistanceTest(t *testing.T) {
 	if !found || text != textFromSelect {
 		t.Errorf("persistance broken")
 	}
+
+	if !Delete(id, tableName) {
+		t.Errorf("Delete broken")
+	}
 }
 
 func Benchmark1000lengthInsert(b *testing.B) {

@@ -43,7 +43,6 @@ func Insert(id uint32, text string, tableName string) bool { // succesful insert
 	cache := dbTable.cache
 	_, foundInCache := cache[id]
 	if foundInCache { // if ID is in the cache
-		print("blu")
 		return false
 	}
 	if len(cache) < maxCacheSize {

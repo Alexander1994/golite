@@ -17,11 +17,12 @@ To run:
 
 ## Current Features
 - Repl
-- Insert, ex: `insert 123 hello world` inserts a row with id:123 and text:"hello world"
-- Select, ex: `select 123` prints hello world
-- Delete, ex: `delete 123` removes the row with id equal to 123
-- Delete  database, ex: `delete database` emptys the cache and removes the data file
-- Open test database, ex `./database test` opens seperate new database for testing
+- Insert, ex: `insert tablename 123 hello world` inserts a row with id:123 and text:"hello world"
+- Select, ex: `select tablename 123` prints hello world
+- Delete, ex: `delete tablename 123` removes the row with id equal to 123
+- Delete  database, ex: `delete database confirm` emptys the cache and removes the data file
+- Create table, ex: `create tablename` creates a table with that name
+- Delete table, ex: `delete tablename` deletes a table with that name
 - Caching
 - External Api
 
@@ -29,7 +30,6 @@ To run:
 - Test Suite
 
 ## Feature Ideas
-- Table creation
 - Option for table with fixed length text
 - Text Compression
 - BST trees for efficiency

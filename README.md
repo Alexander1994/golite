@@ -1,5 +1,5 @@
 # GoLite
-GoLite is a basic SQLite replica in Go
+GoLite is a light weight NoSQL database in Go
 
 ## To replicate
 

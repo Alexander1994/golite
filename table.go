@@ -13,10 +13,6 @@ func createTable(name string) table {
 	return table{name, *file, createCache()}
 }
 
-func (dbTable table) getFileName() string {
-	return dirname + "/" + dbTable.name + ".dat"
-}
-
 func (dbTable table) close() {
 	dbTable.closeCache()
 	dbTable.cache.reset()
@@ -35,4 +31,8 @@ func (dbTable table) closeCache() {
 			dbTable.file.pushToDisk(id, cacheRow.text)
 		}
 	}
+}
+
+func (dbTable table) getFileName() string {
+	return dirname + "/" + dbTable.name + ".dat"
 }

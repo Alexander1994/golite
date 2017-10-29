@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 )
 
@@ -115,49 +113,4 @@ func (file *disk) deleteRowFromDisk(id uint32) bool {
 		}
 	}
 	return false
-}
-
-// Cursor info & controls
-func (file *disk) seek(offset int64) {
-	_, err := (*os.File)(file).Seek(offset, 1)
-	fatal(err)
-}
-
-func (file *disk) write(b []byte) {
-	_, err := (*os.File)(file).Write(b)
-	fatal(err)
-}
-
-func (file *disk) read(b []byte) {
-	_, err := (*os.File)(file).Read(b)
-	fatal(err)
-}
-
-func (file *disk) size() int64 {
-	fileStat, err := ((*os.File)(file)).Stat()
-	fatal(err)
-	return fileStat.Size()
-}
-
-func (file *disk) currentOffSet() int64 {
-	offset, e := ((*os.File)(file)).Seek(0, 1)
-	fatal(e)
-	return offset
-}
-
-func (file *disk) resetCursorToStart() {
-	(*os.File)(file).Seek(0, 0)
-}
-
-func (file *disk) printCursorOffset() {
-	fmt.Printf("cursor offset:%d\n", file.currentOffSet())
-}
-
-// Logging tool
-func fatal(err error) {
-	if err != nil {
-		print("\n")
-		log.Fatal(err)
-		print("\n")
-	}
 }

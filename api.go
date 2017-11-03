@@ -1,4 +1,4 @@
-package main
+package database
 
 // OpenDB is for opening the DB. found in database.go
 func OpenDB() {

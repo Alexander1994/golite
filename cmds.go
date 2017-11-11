@@ -1,4 +1,4 @@
-package database
+package main
 
 import (
 	"fmt"
@@ -6,12 +6,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/Alexander1994/golite/database"
 )
 
 type cmdEvent func(params []string) // should probably return error/bool
 
 func exitCmd(params []string) { // args should probably be empty
-	CloseDB()
+	database.CloseDB()
 	os.Exit(0)
 }
 
@@ -19,7 +21,7 @@ func createTableCmd(params []string) { // %s tableName
 	if len(params) == 1 {
 		if strings.Contains(params[0], ".") {
 			print("table cannot contain period char")
-		} else if !CreateTable(params[0]) {
+		} else if !database.CreateTable(params[0]) {
 			print("unable to create table, table already exists\n")
 		}
 	} else {
@@ -32,7 +34,7 @@ func insertCmd(params []string) { // %s %d %s, tableName ID Text
 		rawID, err := strconv.ParseUint(params[1], 10, 32)
 		id := uint32(rawID)
 		if err == nil && id != 0 {
-			if !Insert(id, joinOnSpace(params[2:]), params[0]) {
+			if !database.Insert(id, joinOnSpace(params[2:]), params[0]) {
 				print("Unable to insert a row with that ID already exists in the DB\n")
 			}
 
@@ -60,7 +62,7 @@ func selectCmd(params []string) { // %s %d, tableName ID
 		rawID, err := strconv.ParseUint(params[1], 10, 32)
 		id := uint32(rawID)
 		if err == nil && id != 0 {
-			text, found := Select(id, params[0])
+			text, found := database.Select(id, params[0])
 			if found {
 				fmt.Printf("%d: %s\n", id, text)
 			} else {
@@ -77,13 +79,13 @@ func selectCmd(params []string) { // %s %d, tableName ID
 func deleteCmd(params []string) { // %s %d, tableName ID or %s, tableName
 	if len(params) == 2 {
 		if params[0] == "database" && params[1] == "confirm" {
-			DeleteDB()
+			database.DeleteDB()
 			println("All data in the db and cache has been removed")
 		} else {
 			rawID, err := strconv.ParseUint(params[1], 10, 32)
 			id := uint32(rawID)
 			if err == nil && id != 0 {
-				if Delete(id, params[0]) {
+				if database.Delete(id, params[0]) {
 					print("row deleted from db\n")
 				} else {
 					print("id not found in memory, row not removed\n")
@@ -94,7 +96,7 @@ func deleteCmd(params []string) { // %s %d, tableName ID or %s, tableName
 			}
 		}
 	} else if len(params) == 1 {
-		if !DeleteTable(params[0]) {
+		if !database.DeleteTable(params[0]) {
 			print("table not found, not deleted\n")
 		}
 	} else {

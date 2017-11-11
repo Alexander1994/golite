@@ -1,17 +1,19 @@
-package database
+package main
 
 import (
 	"bufio"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Alexander1994/golite/database"
 )
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	var cmd string
 	cmds := createCmds()
-	OpenDB()
+	database.OpenDB()
 
 	for true {
 		print("golite>")

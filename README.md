@@ -12,7 +12,7 @@ go build
 
 To run:
 ```
-./database
+./golite
 ```
 
 ## Current Features

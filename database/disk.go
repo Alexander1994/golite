@@ -54,7 +54,7 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 				insertLocation = i
 			}
 			if ithID != 0 {
-				pgTable.insertRow(metaTable.getTextOffset(i), metaTable.getLength(i))
+				pgTable = pgTable.insertRow(metaTable.getTextOffset(i), metaTable.getLength(i))
 			}
 		}
 		if insertLocation != metaTableMaxRowCount { // if hole was found
@@ -65,7 +65,7 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 				file.setTextRow(offset, text)
 				return true
 			}
-		} else { // if no holes found add next table and seek to
+		} else if metaTable.getMetaTableOffset() == 0 { // if no holes found add next table and seek to
 			lastPgIndex := uint32(len(pgTable) - 1)
 			nextMetaTableOffset := metaTable.getTextOffset(lastPgIndex) + uint32(metaTable.getLength(lastPgIndex))
 			file.addAndGoToNextMetaTable(nextMetaTableOffset)
@@ -73,6 +73,28 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 		}
 	}
 	return false // should never happen, throw err?
+}
+
+func (file *disk) getAllRowsFromDisk() []TextDataRow {
+	file.resetCursorToStart()
+	var allRows []TextDataRow
+	nextMetaTableOffset := uint32(0)
+	for true {
+		metaTable := file.loadMetaTable(nextMetaTableOffset)
+		for i := uint32(0); i < metaTableMaxRowCount; i++ {
+			ithID := metaTable.getID(i)
+			ithTextLen := metaTable.getLength(i)
+			ithTextOffset := metaTable.getTextOffset(i)
+			ithText := file.getText(ithTextOffset, ithTextLen)
+			allRows = append(allRows, TextDataRow{ithID, ithTextLen, ithText})
+			file.seek(-int64(ithTextOffset + uint32(ithTextLen)))
+		}
+		nextMetaTableOffset = metaTable.getMetaTableOffset()
+		if nextMetaTableOffset == 0 {
+			return allRows
+		}
+	}
+	return allRows
 }
 
 func (file *disk) getRowFromDisk(id uint32) (string, bool) { // text, found

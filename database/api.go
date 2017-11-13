@@ -1,5 +1,7 @@
 package database
 
+import "fmt"
+
 // OpenDB is for opening the DB. found in database.go
 func OpenDB() {
 	openDB()
@@ -36,6 +38,9 @@ func DeleteTable(name string) bool {
 
 // Insert is for inserting a row into the db
 func Insert(id uint32, text string, tableName string) bool { // succesful insert
+	if id == 0 || len(text) == 0 {
+		return false
+	}
 	dbTable, found := db[tableName]
 	if !found {
 		return false
@@ -61,6 +66,9 @@ func Insert(id uint32, text string, tableName string) bool { // succesful insert
 
 // Delete is for deleting a row from the db
 func Delete(id uint32, tableName string) bool {
+	if id == 0 {
+		return false
+	}
 	dbTable, found := db[tableName]
 	if !found {
 		return false
@@ -81,6 +89,9 @@ func Delete(id uint32, tableName string) bool {
 
 // Select is for retrieving a row from the db
 func Select(id uint32, tableName string) (string, bool) {
+	if id == 0 {
+		return "", false
+	}
 	dbTable, found := db[tableName]
 	if !found {
 		return "", false
@@ -106,4 +117,28 @@ func Select(id uint32, tableName string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// SelectAll Prints all rows in table
+func SelectAll(tableName string) {
+	dbTable, found := db[tableName]
+	if !found {
+		return
+	}
+	cache := dbTable.cache
+	file := dbTable.file
+	fmt.Println("Cache")
+	for id, row := range cache {
+		if !row.inMem {
+			fmt.Printf("%d: %s\n", id, row.text)
+		}
+	}
+	fmt.Println("Disk")
+	allRow := file.getAllRowsFromDisk()
+	for _, row := range allRow {
+		if row.id == 0 {
+			break
+		}
+		fmt.Printf("%d: %s\n", row.id, row.text)
+	}
 }

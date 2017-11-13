@@ -11,9 +11,9 @@ type pageRow struct {
 }
 type pageTable []pageRow
 
-func (pgTable pageTable) insertRow(offset uint32, length uint16) {
+func (pgTable pageTable) insertRow(offset uint32, length uint16) pageTable {
 	currRange := pageRow{offset, length}
-	pgTable = append(pgTable, currRange)
+	return append(pgTable, currRange)
 }
 
 func (pgTable pageTable) getSmallestHoleToFit(length uint16, nextMetaTableOffset uint32) (uint32, bool) { // offset relative to meta table end, offset found

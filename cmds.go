@@ -104,6 +104,14 @@ func deleteCmd(params []string) { // %s %d, tableName ID or %s, tableName
 	}
 }
 
+func debugTableCmd(params []string) { // %s tableName
+	if len(params) == 1 {
+		database.SelectAll(params[0])
+	} else {
+		print("invalid arg count, 1 expected: %s, table name goes here\n")
+	}
+}
+
 func createCmds() map[string]cmdEvent {
 	events := make(map[string]cmdEvent)
 	events["insert"] = insertCmd
@@ -111,5 +119,6 @@ func createCmds() map[string]cmdEvent {
 	events["delete"] = deleteCmd
 	events["create"] = createTableCmd
 	events[":exit"] = exitCmd
+	events["debug"] = debugTableCmd
 	return events
 }

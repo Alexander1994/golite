@@ -70,6 +70,8 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 			nextMetaTableOffset := metaTable.getTextOffset(lastPgIndex) + uint32(metaTable.getLength(lastPgIndex))
 			file.addAndGoToNextMetaTable(nextMetaTableOffset)
 			nextMetaTableOffset = 0 // since we are at the next metatable offset=0
+		} else { // table full and is next offset
+			nextMetaTableOffset = metaTable.getMetaTableOffset()
 		}
 	}
 	return false // should never happen, throw err?

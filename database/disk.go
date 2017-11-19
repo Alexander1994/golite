@@ -66,8 +66,7 @@ func (file *disk) pushToDisk(id uint32, text string) bool {
 				return true
 			}
 		} else if metaTable.getMetaTableOffset() == 0 { // if no holes found add next table and seek to
-			lastPgIndex := uint32(len(pgTable) - 1)
-			nextMetaTableOffset := metaTable.getTextOffset(lastPgIndex) + uint32(metaTable.getLength(lastPgIndex))
+			nextMetaTableOffset := metaTable.getTextOffset(metaTableMaxRowCount-1) + uint32(metaTable.getLength(metaTableMaxRowCount-1))
 			file.addAndGoToNextMetaTable(nextMetaTableOffset)
 			nextMetaTableOffset = 0 // since we are at the next metatable offset=0
 		} else { // table full and is next offset

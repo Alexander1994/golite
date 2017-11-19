@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/Alexander1994/golite/database"
@@ -66,6 +67,14 @@ func Test_persistanceTest(t *testing.T) {
 func Benchmark_1000lengthInsert(b *testing.B) {
 	setupTest()
 	database.Insert(1, _1000CharString, tableName)
+	tearDownTest()
+}
+
+func Benchmark_1000Inserts(b *testing.B) {
+	setupTest()
+	for i := uint32(0); i < 1000; i++ {
+		database.Insert(i, strconv.Itoa(int(i)), tableName)
+	}
 	tearDownTest()
 }
 

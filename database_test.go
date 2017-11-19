@@ -3,18 +3,20 @@ package main
 import (
 	"os"
 	"testing"
+
+	"github.com/Alexander1994/golite/database"
 )
 
 var _1000CharString string
 
 func setupTests() {
-	OpenDB()
+	database.OpenDB()
 	_1000CharString = stringOfLength(1000)
 }
 
 func tearDownTests() {
-	CloseDB()
-	DeleteDB()
+	database.CloseDB()
+	database.DeleteDB()
 }
 
 func TestMain(m *testing.M) {
@@ -28,30 +30,30 @@ func Test_persistanceTest(t *testing.T) {
 	id := uint32(123)
 	text := "hello world"
 	tableName := "test"
-	if !CreateTable(tableName) {
+	if !database.CreateTable(tableName) {
 		t.Errorf("could not create a table")
 	}
-	isInsert := Insert(id, text, tableName)
-	CloseDB()
+	isInsert := database.Insert(id, text, tableName)
+	database.CloseDB()
 	if !isInsert {
 		t.Errorf("could not insert")
 	}
 
-	OpenDB()
-	textFromSelect, found := Select(id, tableName)
+	database.OpenDB()
+	textFromSelect, found := database.Select(id, tableName)
 
 	if !found || text != textFromSelect {
 		t.Errorf("persistance broken")
 	}
 
-	if !Delete(id, tableName) {
+	if !database.Delete(id, tableName) {
 		t.Errorf("Delete broken")
 	}
 }
 
-func Benchmark1000lengthInsert(b *testing.B) {
+func Benchmark_1000lengthInsert(b *testing.B) {
 	tableName := "test"
-	Insert(1, _1000CharString, tableName)
+	database.Insert(1, _1000CharString, tableName)
 }
 
 // helper functions

@@ -8,31 +8,41 @@ import (
 )
 
 var _1000CharString string
+var tableName string
 
-func setupTests() {
-	database.OpenDB()
+// setup suite and test
+func setupTestSuite() {
 	_1000CharString = stringOfLength(1000)
+	tableName = "test"
 }
 
-func tearDownTests() {
+func tearDownTestSuite() {
+
+}
+
+func setupTest() {
+	database.OpenDB()
+	database.DeleteTable(tableName)
+	database.CreateTable(tableName)
+}
+
+func tearDownTest() {
 	database.CloseDB()
 	database.DeleteDB()
 }
 
 func TestMain(m *testing.M) {
-	setupTests()
+	setupTestSuite()
 	retCode := m.Run()
-	tearDownTests()
+	tearDownTestSuite()
 	os.Exit(retCode)
 }
 
+// Tests
 func Test_persistanceTest(t *testing.T) {
+	setupTest()
 	id := uint32(123)
 	text := "hello world"
-	tableName := "test"
-	if !database.CreateTable(tableName) {
-		t.Errorf("could not create a table")
-	}
 	isInsert := database.Insert(id, text, tableName)
 	database.CloseDB()
 	if !isInsert {
@@ -49,11 +59,14 @@ func Test_persistanceTest(t *testing.T) {
 	if !database.Delete(id, tableName) {
 		t.Errorf("Delete broken")
 	}
+	tearDownTest()
 }
 
+// Benchmarks
 func Benchmark_1000lengthInsert(b *testing.B) {
-	tableName := "test"
+	setupTest()
 	database.Insert(1, _1000CharString, tableName)
+	tearDownTest()
 }
 
 // helper functions
